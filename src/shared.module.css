@@ -1,0 +1,79 @@
+/* 複数の画面で使い回す部品のスタイル */
+
+.heading {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.subheading {
+  margin: 20px 0 8px;
+  font-size: 15px;
+  color: var(--subtext);
+}
+
+/* 入力欄。iPhone の Safari は文字が16px未満だと勝手に拡大するので 16px にしている */
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.buttonSecondary {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.buttonDanger {
+  composes: buttonSecondary;
+  color: #d93025;
+}
+
+.message {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--card);
+  font-size: 14px;
+  white-space: pre-line;
+}
+
+.error {
+  color: #d93025;
+}
+
+.muted {
+  color: var(--subtext);
+  font-size: 14px;
+}

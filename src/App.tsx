@@ -1,5 +1,9 @@
 import { useState } from 'react'
 import styles from './App.module.css'
+import AddScreen from './screens/AddScreen'
+import ListScreen from './screens/ListScreen'
+import { storage } from './storage'
+import type { Word } from './types'
 
 // タブの種類。この4つ以外の文字は入れられない（TypeScript が止めてくれる）
 type Tab = 'drill' | 'cloze' | 'list' | 'add'
@@ -19,11 +23,24 @@ function App() {
   // useState：画面が覚えておく値。tab が今のタブ、setTab で変更する
   const [tab, setTab] = useState<Tab>('drill')
 
+  // 単語リストはアプリ全体で共有するので、いちばん上の App が持つ。
+  // useState に関数を渡すと、最初の1回だけ実行される（保存データの読み込みは最初だけでよい）
+  const [words, setWords] = useState<Word[]>(() => storage.loadWords())
+
+  // 単語リストを新しくするときは、画面の更新と保存を必ずセットで行う
+  function handleChangeWords(next: Word[]) {
+    setWords(next)
+    storage.saveWords(next)
+  }
+
   return (
     <div className={styles.app}>
       <main className={styles.main}>
-        <h1>TOEIC 600</h1>
-        <p>いまのタブ：{TAB_LABELS[tab]}</p>
+        {/* tab が一致する画面だけを表示する */}
+        {tab === 'drill' && <p>単語ドリルはステップ4で作ります。</p>}
+        {tab === 'cloze' && <p>穴埋めはステップ8・9で作ります。</p>}
+        {tab === 'list' && <ListScreen words={words} onChangeWords={handleChangeWords} />}
+        {tab === 'add' && <AddScreen words={words} onChangeWords={handleChangeWords} />}
       </main>
 
       <nav className={styles.tabBar}>
