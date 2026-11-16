@@ -12,6 +12,9 @@ const TAB_LABELS: Record<Tab, string> = {
   add: '追加',
 }
 
+// タブを左から並べる順番
+const TABS: Tab[] = ['drill', 'cloze', 'list', 'add']
+
 function App() {
   // useState：画面が覚えておく値。tab が今のタブ、setTab で変更する
   const [tab, setTab] = useState<Tab>('drill')
@@ -24,15 +27,16 @@ function App() {
       </main>
 
       <nav className={styles.tabBar}>
-        {/* 見本：1つ目のボタン。押すと setTab('drill') で tab が 'drill' に変わる */}
-        <button
-          className={`${styles.tabButton} ${tab === 'drill' ? styles.active : ''}`}
-          onClick={() => setTab('drill')}
-        >
-          {TAB_LABELS.drill}
-        </button>
-
-        {/* TODO(あなたの番): 見本をまねして、残り3つ（cloze / list / add）を書いてください */}
+        {/* TABS の4つ分、同じ形のボタンを作る（map = 配列の1つ1つを別のものに変換する） */}
+        {TABS.map((t) => (
+          <button
+            key={t} // React が「どのボタンか」を見分けるための目印
+            className={`${styles.tabButton} ${tab === t ? styles.active : ''}`}
+            onClick={() => setTab(t)} // 押したら tab をこのタブに変える
+          >
+            {TAB_LABELS[t]}
+          </button>
+        ))}
       </nav>
     </div>
   )
