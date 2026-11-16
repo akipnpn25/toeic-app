@@ -1,0 +1,65 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.flash {
+  margin: 0 0 8px;
+  color: #1e8e3e;
+  font-size: 14px;
+}
+
+.word {
+  margin: 16px 0 20px;
+  text-align: center;
+  font-size: 32px;
+  font-weight: bold;
+  word-break: break-word;
+}
+
+.pos {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--subtext);
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.choice {
+  padding: 14px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 17px;
+  text-align: left;
+}
+
+/* 答えたあとの色 */
+.correct {
+  border-color: #1e8e3e;
+  background: rgba(30, 142, 62, 0.18);
+}
+
+.wrong {
+  border-color: #d93025;
+  background: rgba(217, 48, 37, 0.18);
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result p {
+  margin: 0;
+}

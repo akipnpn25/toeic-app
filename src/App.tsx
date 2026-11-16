@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import styles from './App.module.css'
 import AddScreen from './screens/AddScreen'
+import DrillScreen from './screens/DrillScreen'
 import ListScreen from './screens/ListScreen'
 import { storage } from './storage'
 import type { Word } from './types'
@@ -37,7 +38,7 @@ function App() {
     <div className={styles.app}>
       <main className={styles.main}>
         {/* tab が一致する画面だけを表示する */}
-        {tab === 'drill' && <p>単語ドリルはステップ4で作ります。</p>}
+        {tab === 'drill' && <DrillScreen words={words} onChangeWords={handleChangeWords} />}
         {tab === 'cloze' && <p>穴埋めはステップ8・9で作ります。</p>}
         {tab === 'list' && <ListScreen words={words} onChangeWords={handleChangeWords} />}
         {tab === 'add' && <AddScreen words={words} onChangeWords={handleChangeWords} />}
