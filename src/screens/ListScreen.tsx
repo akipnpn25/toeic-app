@@ -108,7 +108,7 @@ export default function ListScreen({ words, onChangeWords }: Props) {
                 </div>
                 <div>{w.meanings.join('、')}</div>
                 <div className={shared.muted}>
-                  正解 {w.correct}・間違い {w.wrong}
+                  正解 {w.correct}・間違い {w.wrong}・レベル {w.level}
                 </div>
                 <div className={styles.actions}>
                   <button className={shared.buttonSecondary} onClick={() => startEdit(w)}>編集</button>

@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import type { Pos, Word } from '../types'
-import { buildNextQuestion, makeQuestion, pickTargetWord, recordAnswer, shuffle } from './drill'
+import {
+  applyAnswer,
+  buildNextQuestion,
+  makeQuestion,
+  pickTargetWord,
+  queueRetry,
+  recordAnswer,
+  removeRetry,
+  RETRY_GAP,
+  shuffle,
+} from './drill'
+import type { PickContext, Retry } from './drill'
 
 function makeWord(id: string, word: string, meanings: string[], pos?: Pos): Word {
   return { id, word, meanings, pos, level: 0, correct: 0, wrong: 0, nextReview: 0, addedAt: 0 }
@@ -97,26 +108,107 @@ describe('makeQuestion', () => {
   })
 })
 
+const NOW = 1_000_000
+// テスト用の「今の状況」を作る
+function ctx(overrides: Partial<PickContext> = {}): PickContext {
+  return { now: NOW, lastId: null, retries: [], answeredCount: 0, ...overrides }
+}
+
 describe('pickTargetWord', () => {
   it('直前と同じ単語は避ける', () => {
     for (let i = 0; i < 20; i++) {
-      expect(pickTargetWord(verbs, 'v1')!.id).not.toBe('v1')
+      expect(pickTargetWord(verbs, ctx({ lastId: 'v1' }))!.word.id).not.toBe('v1')
     }
   })
   it('単語が1つだけなら、それを返す', () => {
-    expect(pickTargetWord([verbs[0]], 'v1')!.id).toBe('v1')
+    expect(pickTargetWord([verbs[0]], ctx({ lastId: 'v1' }))!.word.id).toBe('v1')
   })
   it('単語がなければ null', () => {
-    expect(pickTargetWord([], null)).toBeNull()
+    expect(pickTargetWord([], ctx())).toBeNull()
+  })
+  it('復習の期日が来た単語だけを出す', () => {
+    const words = verbs.map((w) => (w.id === 'v2' ? w : { ...w, nextReview: NOW + 99999 }))
+    for (let i = 0; i < 10; i++) {
+      expect(pickTargetWord(words, ctx())!.word.id).toBe('v2')
+    }
+  })
+  it('再出題の予約は、数問たったら最優先で出る', () => {
+    const retries: Retry[] = [{ wordId: 'v3', dueAt: 3 }]
+    const picked = pickTargetWord(verbs, ctx({ retries, answeredCount: 3 }))!
+    expect(picked).toMatchObject({ isRetry: true })
+    expect(picked.word.id).toBe('v3')
+  })
+  it('再出題の予約は、まだ早ければ出ない', () => {
+    const retries: Retry[] = [{ wordId: 'v3', dueAt: 3 }]
+    for (let i = 0; i < 20; i++) {
+      expect(pickTargetWord(verbs, ctx({ retries, answeredCount: 2 }))!.isRetry).toBe(false)
+    }
+  })
+  it('直前に出した単語の再出題は、すぐには出さない', () => {
+    const retries: Retry[] = [{ wordId: 'v3', dueAt: 0 }]
+    for (let i = 0; i < 20; i++) {
+      expect(pickTargetWord(verbs, ctx({ retries, lastId: 'v3' }))!.word.id).not.toBe('v3')
+    }
   })
 })
 
 describe('buildNextQuestion', () => {
   it('単語が足りなければ null', () => {
-    expect(buildNextQuestion([verbs[0]], null)).toBeNull()
+    expect(buildNextQuestion([verbs[0]], ctx())).toBeNull()
   })
-  it('十分あれば問題を作る', () => {
-    expect(buildNextQuestion([...verbs, ...nouns], null)).not.toBeNull()
+  it('十分あれば問題を作る（通常は isRetry が false）', () => {
+    const q = buildNextQuestion([...verbs, ...nouns], ctx())!
+    expect(q.isRetry).toBe(false)
+  })
+  it('再出題の予約から作った問題は isRetry が true', () => {
+    const retries: Retry[] = [{ wordId: 'n1', dueAt: 0 }]
+    const q = buildNextQuestion([...verbs, ...nouns], ctx({ retries }))!
+    expect(q).toMatchObject({ wordId: 'n1', isRetry: true })
+  })
+})
+
+describe('queueRetry / removeRetry', () => {
+  it('間違えた単語を、RETRY_GAP 問あとに出す予約にする', () => {
+    expect(queueRetry([], 'v1', 5)).toEqual([{ wordId: 'v1', dueAt: 5 + RETRY_GAP }])
+  })
+  it('同じ単語の予約は1つだけ（予約し直す）', () => {
+    const r = queueRetry([{ wordId: 'v1', dueAt: 4 }], 'v1', 10)
+    expect(r).toEqual([{ wordId: 'v1', dueAt: 10 + RETRY_GAP }])
+  })
+  it('予約を取り除ける', () => {
+    expect(removeRetry([{ wordId: 'v1', dueAt: 1 }, { wordId: 'v2', dueAt: 2 }], 'v1')).toEqual([
+      { wordId: 'v2', dueAt: 2 },
+    ])
+  })
+})
+
+describe('applyAnswer', () => {
+  const q = (isRetry: boolean) => ({
+    wordId: 'v1',
+    word: 'decide',
+    answer: '決める',
+    choices: [],
+    isRetry,
+  })
+  const at3 = verbs.map((w) => (w.id === 'v1' ? { ...w, level: 3 } : w))
+
+  it('通常の問題で正解すると、レベルが上がり次の出題日が決まる', () => {
+    const r = applyAnswer(at3, q(false), true, NOW)[0]
+    expect(r).toMatchObject({ level: 4, correct: 1, wrong: 0 })
+    expect(r.nextReview).toBeGreaterThan(NOW)
+  })
+  it('通常の問題で間違えると、レベルが2下がる', () => {
+    const r = applyAnswer(at3, q(false), false, NOW)[0]
+    expect(r).toMatchObject({ level: 1, correct: 0, wrong: 1 })
+  })
+  it('再出題で正解しても、レベルは変わらない（正解数だけ増える）', () => {
+    const r = applyAnswer(at3, q(true), true, NOW)[0]
+    expect(r).toMatchObject({ level: 3, correct: 1 })
+    expect(r.nextReview).toBe(at3[0].nextReview)
+  })
+  it('再出題でまた間違えても、レベルはさらに下がらない', () => {
+    const r = applyAnswer(at3, q(true), false, NOW)[0]
+    expect(r).toMatchObject({ level: 3, wrong: 1 })
   })
 })
 
