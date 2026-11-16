@@ -1,0 +1,32 @@
+/* アプリ全体で使う「色の変数」。ライトモードの値。 */
+:root {
+  --bg: #ffffff;
+  --text: #1c1c1e;
+  --subtext: #6b6b70;
+  --border: #d8d8dc;
+  --accent: #2f6fed;
+
+  color-scheme: light dark;
+}
+
+/* ダークモード（iPhone/Mac の設定が「ダーク」のとき）は変数の値だけ入れ替える */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1e;
+    --text: #f2f2f7;
+    --subtext: #9a9aa0;
+    --border: #3a3a3e;
+    --accent: #5b8cff;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+}

@@ -1,0 +1,39 @@
+/* 画面全体：1カラム。スマホ幅を想定して最大 480px */
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  padding: 16px;
+}
+
+/* 下に固定するタブバー */
+.tabBar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  /* iPhone のホームバーに隠れないための余白 */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabButton {
+  flex: 1;
+  padding: 12px 0;
+  border: none;
+  background: none;
+  color: var(--subtext);
+  font-size: 14px;
+}
+
+/* 選択中のタブ */
+.active {
+  color: var(--accent);
+  font-weight: bold;
+}
