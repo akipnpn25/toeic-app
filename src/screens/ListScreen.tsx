@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { POS_LABELS, POS_LIST } from '../constants'
+import { parseExamples, validateExamples } from '../logic/vocab'
 import { deleteWord, filterWords, splitMeanings, updateWord } from '../logic/words'
 import type { Pos, Word } from '../types'
 import shared from '../shared.module.css'
@@ -16,6 +17,7 @@ export default function ListScreen({ words, onChangeWords }: Props) {
   const [editWord, setEditWord] = useState('')
   const [editMeanings, setEditMeanings] = useState('')
   const [editPos, setEditPos] = useState<Pos | ''>('')
+  const [editExamples, setEditExamples] = useState('') // 例文（1行に1文）
   const [error, setError] = useState('')
 
   // 検索で絞り込み、新しく追加した順（逆順）に並べる
@@ -26,15 +28,23 @@ export default function ListScreen({ words, onChangeWords }: Props) {
     setEditWord(w.word)
     setEditMeanings(w.meanings.join('、'))
     setEditPos(w.pos ?? '') // ?? は「左が undefined なら右を使う」
+    setEditExamples((w.examples ?? []).join('\n'))
     setError('')
   }
 
   function saveEdit() {
     if (editingId === null) return
+    const examples = parseExamples(editExamples)
+    const exampleError = validateExamples(editWord, examples)
+    if (exampleError) {
+      setError(exampleError)
+      return
+    }
     const result = updateWord(words, editingId, {
       word: editWord,
       meanings: splitMeanings(editMeanings),
       pos: editPos === '' ? undefined : editPos,
+      examples,
     })
     if (result.error === 'empty') {
       setError('英単語と意味の両方を入力してください')
@@ -93,6 +103,15 @@ export default function ListScreen({ words, onChangeWords }: Props) {
                     </option>
                   ))}
                 </select>
+                <textarea
+                  className={shared.textarea}
+                  style={{ minHeight: 64 }}
+                  value={editExamples}
+                  onChange={(e) => setEditExamples(e.target.value)}
+                  placeholder="例文（任意・1行に1文）"
+                  autoCapitalize="sentences"
+                  autoCorrect="off"
+                />
                 {error !== '' && <p className={`${shared.error} ${shared.muted}`}>{error}</p>}
                 <div className={styles.actions}>
                   <button className={shared.button} onClick={saveEdit}>保存</button>
@@ -109,6 +128,7 @@ export default function ListScreen({ words, onChangeWords }: Props) {
                 <div>{w.meanings.join('、')}</div>
                 <div className={shared.muted}>
                   正解 {w.correct}・間違い {w.wrong}・レベル {w.level}
+                  {w.examples && w.examples.length > 0 && `・例文 ${w.examples.length}`}
                 </div>
                 <div className={styles.actions}>
                   <button className={shared.buttonSecondary} onClick={() => startEdit(w)}>編集</button>

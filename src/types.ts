@@ -29,6 +29,7 @@ export type Word = {
   word: string // 英単語
   meanings: string[] // 意味（複数ありうるので配列）
   pos?: Pos // 品詞。「?」は「なくてもよい」
+  examples?: string[] // 例文（英語。この単語を含む文）。語彙問題の空所にする
   level: number // 間隔反復のレベル（0〜）
   correct: number // 正解した回数
   wrong: number // 間違えた回数

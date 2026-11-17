@@ -3,12 +3,14 @@
 // こうするとテストが書きやすい。どの関数も、受け取った配列を直接は書き換えない。
 
 import type { Pos, Word } from '../types'
+import { makeBlank } from './vocab'
 
 // 追加前の「単語の素材」（id や正解数などはまだ持たない）
 export type WordEntry = {
   word: string
   meanings: string[]
   pos?: Pos
+  examples?: string[]
 }
 
 // 比較用のキー。大文字小文字を区別しない（"Decide" と "decide" は同じ単語）
@@ -25,7 +27,20 @@ export function splitMeanings(text: string): string[] {
 }
 
 // 1行（例："decide 決める、決心する"）を読み取る。読み取れなければ null。
+// 「|」のあとに英語の例文を書くこともできる（例："decide 決める | We must decide by Friday."）。
+// 例文に英単語が含まれていなければ、間違いに気づけるよう、その行ごと読み取れなかったことにする。
 export function parseLine(line: string): WordEntry | null {
+  const [main, ...exampleParts] = line.split(/[|｜]/)
+  const example = exampleParts.join('|').trim()
+  const entry = parseWordAndMeanings(main)
+  if (!entry) return null
+  if (example === '') return entry
+  if (makeBlank(example, entry.word) === null) return null
+  return { ...entry, examples: [example] }
+}
+
+// 「英単語 意味」の部分だけを読み取る
+function parseWordAndMeanings(line: string): WordEntry | null {
   const text = line.trim()
 
   // 1) 英単語部分が半角文字だけ、意味が半角以外から始まる形。
@@ -87,6 +102,7 @@ export function addWords(
       word: entry.word.trim(),
       meanings: entry.meanings,
       pos: entry.pos,
+      ...(entry.examples ? { examples: entry.examples } : {}), // 例文があるときだけ項目を作る
       level: 0,
       correct: 0,
       wrong: 0,
@@ -96,6 +112,25 @@ export function addWords(
     added++
   }
   return { words: result, added, duplicates }
+}
+
+// すでに登録してある単語のうち、例文がまだないものに、素材の例文を足す。
+// （サンプルを読み込んだとき、自分で先に登録していた単語でも語彙問題に使えるようにするため）
+// すでに例文がある単語・素材に例文がない単語は、そのまま。
+export function addMissingExamples(
+  words: Word[],
+  entries: WordEntry[],
+): { words: Word[]; updated: number } {
+  const byKey = new Map(entries.map((e) => [keyOf(e.word), e]))
+  let updated = 0
+  const result = words.map((w) => {
+    const entry = byKey.get(keyOf(w.word))
+    const hasExamples = (w.examples?.length ?? 0) > 0
+    if (!entry?.examples?.length || hasExamples) return w
+    updated++
+    return { ...w, examples: entry.examples }
+  })
+  return { words: result, updated }
 }
 
 // 検索。英単語か意味のどこかに含まれていればヒット。
@@ -116,7 +151,7 @@ export type UpdateResult = {
 export function updateWord(
   words: Word[],
   id: string,
-  patch: { word: string; meanings: string[]; pos?: Pos },
+  patch: { word: string; meanings: string[]; pos?: Pos; examples?: string[] },
 ): UpdateResult {
   const word = patch.word.trim()
   if (word === '' || patch.meanings.length === 0) {
@@ -128,7 +163,16 @@ export function updateWord(
 
   return {
     words: words.map((w) =>
-      w.id === id ? { ...w, word, meanings: patch.meanings, pos: patch.pos } : w,
+      w.id === id
+        ? {
+            ...w,
+            word,
+            meanings: patch.meanings,
+            pos: patch.pos,
+            // 例文が空なら、項目ごと持たない状態に戻す
+            examples: patch.examples && patch.examples.length > 0 ? patch.examples : undefined,
+          }
+        : w,
     ),
   }
 }

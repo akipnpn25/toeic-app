@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { POS_LABELS, POS_LIST } from '../../constants'
-import { addWords, parseBulk, splitMeanings } from '../../logic/words'
+import { STARTER_WORDS } from '../../data/starterWords'
+import { parseExamples, validateExamples } from '../../logic/vocab'
+import { addMissingExamples, addWords, parseBulk, splitMeanings } from '../../logic/words'
 import type { Pos, Word } from '../../types'
 import shared from '../../shared.module.css'
 
@@ -22,6 +24,7 @@ export default function WordAddPanel({ words, onChangeWords }: Props) {
   const [word, setWord] = useState('')
   const [meanings, setMeanings] = useState('')
   const [pos, setPos] = useState<Pos | ''>('') // '' は「未選択」
+  const [examples, setExamples] = useState('') // 例文（1行に1文）
   // まとめて追加する欄の入力値
   const [bulk, setBulk] = useState('')
   // 画面に出すメッセージ
@@ -39,8 +42,20 @@ export default function WordAddPanel({ words, onChangeWords }: Props) {
       show('英単語と意味の両方を入力してください', true)
       return
     }
+    // 例文には、英単語がそのままの形で入っている必要がある（語彙問題で空所にするため）
+    const exampleList = parseExamples(examples)
+    const exampleError = validateExamples(word, exampleList)
+    if (exampleError) {
+      show(exampleError, true)
+      return
+    }
     const result = addWords(words, [
-      { word, meanings: meaningList, pos: pos === '' ? undefined : pos },
+      {
+        word,
+        meanings: meaningList,
+        pos: pos === '' ? undefined : pos,
+        examples: exampleList.length > 0 ? exampleList : undefined,
+      },
     ])
     onChangeWords(result.words)
     if (result.added === 0) {
@@ -50,6 +65,19 @@ export default function WordAddPanel({ words, onChangeWords }: Props) {
     show(`「${word.trim()}」を追加しました`)
     setWord('')
     setMeanings('')
+    setExamples('')
+  }
+
+  function handleSamples() {
+    // 新しい単語を追加し、自分で先に登録していた単語には（例文がなければ）サンプルの例文を足す
+    const added = addWords(words, STARTER_WORDS)
+    const merged = addMissingExamples(added.words, STARTER_WORDS)
+    onChangeWords(merged.words)
+
+    const lines: string[] = []
+    if (added.added > 0) lines.push(`サンプル単語を${added.added}語追加しました`)
+    if (merged.updated > 0) lines.push(`登録済みの${merged.updated}語に例文を追加しました`)
+    show(lines.length > 0 ? lines.join('\n') : 'サンプル単語はすべて登録済みです')
   }
 
   function handleAddBulk() {
@@ -67,6 +95,11 @@ export default function WordAddPanel({ words, onChangeWords }: Props) {
   return (
     <div>
       <h2 className={shared.heading}>単語を追加</h2>
+
+      {/* 結果のメッセージは、操作した場所の近くに見えるよう、上に出す */}
+      {message !== '' && (
+        <p className={`${shared.message} ${isError ? shared.error : ''}`}>{message}</p>
+      )}
 
       <div className={shared.field}>
         <input
@@ -95,6 +128,15 @@ export default function WordAddPanel({ words, onChangeWords }: Props) {
             </option>
           ))}
         </select>
+        <textarea
+          className={shared.textarea}
+          style={{ minHeight: 64 }}
+          placeholder={'例文（任意・1行に1文）。語彙問題で、英単語の部分が空所になります\nWe must decide by Friday.'}
+          value={examples}
+          onChange={(e) => setExamples(e.target.value)}
+          autoCapitalize="sentences"
+          autoCorrect="off"
+        />
         <button className={shared.button} onClick={handleAddOne}>
           追加
         </button>
@@ -104,7 +146,9 @@ export default function WordAddPanel({ words, onChangeWords }: Props) {
       <div className={shared.field}>
         <textarea
           className={shared.textarea}
-          placeholder={'1行に1語。「英単語 意味」の形で貼り付け\ndecide 決める、決心する\ncontract 契約、契約書'}
+          placeholder={
+            '1行に1語。「英単語 意味」の形で貼り付け\ndecide 決める、決心する\ncontract 契約、契約書\n「|」のあとに例文も書けます\nsubmit 提出する | Please submit the form.'
+          }
           value={bulk}
           onChange={(e) => setBulk(e.target.value)}
           autoCapitalize="none"
@@ -115,9 +159,11 @@ export default function WordAddPanel({ words, onChangeWords }: Props) {
         </button>
       </div>
 
-      {message !== '' && (
-        <p className={`${shared.message} ${isError ? shared.error : ''}`}>{message}</p>
-      )}
+      <h3 className={shared.subheading}>サンプル</h3>
+      <button className={shared.buttonSecondary} onClick={handleSamples}>
+        サンプル単語を読み込む（{STARTER_WORDS.length}語・例文つき）
+      </button>
+      <p className={shared.muted}>語彙問題を試すための単語です。いらなくなったら単語一覧から消せます。</p>
     </div>
   )
 }

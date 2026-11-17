@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Word } from '../types'
 import {
+  addMissingExamples,
   addWords,
   deleteWord,
   filterWords,
@@ -47,6 +48,20 @@ describe('parseLine', () => {
     expect(parseLine('decide')).toBeNull()
     expect(parseLine('decide   ')).toBeNull()
   })
+  it('「|」のあとの英語は例文として読み取る', () => {
+    expect(parseLine('decide 決める、決心する | We must decide by Friday.')).toEqual({
+      word: 'decide',
+      meanings: ['決める', '決心する'],
+      examples: ['We must decide by Friday.'],
+    })
+    expect(parseLine('decide 決める｜Decide now.')?.examples).toEqual(['Decide now.'])
+  })
+  it('例文に英単語が入っていない行は、読み取れない行として扱う', () => {
+    expect(parseLine('decide 決める | We must choose by Friday.')).toBeNull()
+  })
+  it('「|」だけで例文が空なら、例文なしで読み取る', () => {
+    expect(parseLine('decide 決める |')).toEqual({ word: 'decide', meanings: ['決める'] })
+  })
 })
 
 describe('parseBulk', () => {
@@ -91,10 +106,40 @@ describe('addWords', () => {
     expect(r.added).toBe(1)
     expect(r.duplicates).toBe(1)
   })
+  it('例文つきの素材なら、例文も保存する', () => {
+    const r = addWords([], [{ word: 'decide', meanings: ['決める'], examples: ['We decide.'] }])
+    expect(r.words[0].examples).toEqual(['We decide.'])
+    expect(addWords([], [{ word: 'x', meanings: ['y'] }]).words[0]).not.toHaveProperty('examples')
+  })
   it('元の配列は書き換えない', () => {
     const existing: Word[] = []
     addWords(existing, [{ word: 'decide', meanings: ['決める'] }])
     expect(existing).toHaveLength(0)
+  })
+})
+
+describe('addMissingExamples', () => {
+  const entries = [
+    { word: 'decide', meanings: ['決める'], examples: ['We decide.'] },
+    { word: 'contract', meanings: ['契約'], examples: ['The contract is long.'] },
+    { word: 'invoice', meanings: ['請求書'] }, // 例文なし
+  ]
+  it('例文のない登録済みの単語に、素材の例文を足す（大文字小文字は無視）', () => {
+    const words = [makeWord('1', 'Decide', ['決める']), makeWord('2', 'invoice', ['請求書'])]
+    const r = addMissingExamples(words, entries)
+    expect(r.updated).toBe(1)
+    expect(r.words[0].examples).toEqual(['We decide.'])
+    expect(r.words[1].examples).toBeUndefined() // 素材に例文がない
+  })
+  it('すでに例文がある単語は、書き換えない', () => {
+    const words = [{ ...makeWord('1', 'decide', ['決める']), examples: ['My own sentence to decide.'] }]
+    const r = addMissingExamples(words, entries)
+    expect(r.updated).toBe(0)
+    expect(r.words[0].examples).toEqual(['My own sentence to decide.'])
+  })
+  it('素材にない単語は、そのまま', () => {
+    const words = [makeWord('1', 'other', ['別'])]
+    expect(addMissingExamples(words, entries)).toEqual({ words, updated: 0 })
   })
 })
 
@@ -123,6 +168,12 @@ describe('updateWord', () => {
   })
   it('自分自身と同じ英単語のままなら成功する', () => {
     expect(updateWord(words, '1', { word: 'decide', meanings: ['x'] }).error).toBeUndefined()
+  })
+  it('例文を保存でき、空にすると例文の項目がなくなる', () => {
+    const withEx = updateWord(words, '1', { word: 'decide', meanings: ['決める'], examples: ['We decide.'] })
+    expect(withEx.words[0].examples).toEqual(['We decide.'])
+    const cleared = updateWord(withEx.words, '1', { word: 'decide', meanings: ['決める'], examples: [] })
+    expect(cleared.words[0].examples).toBeUndefined()
   })
   it('英単語か意味が空なら失敗する', () => {
     expect(updateWord(words, '1', { word: ' ', meanings: ['x'] }).error).toBe('empty')

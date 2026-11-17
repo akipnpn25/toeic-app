@@ -108,6 +108,7 @@ function App() {
             families={families}
             templates={templates}
             stats={patternStats}
+            onChangeWords={handleChangeWords}
             onChangeStats={handleChangePatternStats}
             onAnswered={handleAnswered}
           />
