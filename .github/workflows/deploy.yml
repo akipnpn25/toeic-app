@@ -1,0 +1,45 @@
+# main ブランチに push されるたびに、テスト → ビルド → GitHub Pages へ公開、を自動で行う。
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # GitHub の画面から手動でも実行できる
+
+# 公開に必要な最小限の権限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時に2つデプロイが走らないようにする
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci # package-lock.json のとおりに依存関係を入れる
+      - run: npm test # テストが失敗したら、ここで止まって公開されない
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
