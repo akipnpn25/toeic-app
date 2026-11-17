@@ -49,6 +49,20 @@ describe('storage', () => {
     expect(storage.loadDailyLog()).toEqual({})
   })
 
+  it('設定は、何もなければ初期値（目標20問）', () => {
+    expect(storage.loadSettings()).toEqual({ dailyGoal: 20 })
+  })
+
+  it('設定を保存して読み出せる', () => {
+    storage.saveSettings({ dailyGoal: 50 })
+    expect(storage.loadSettings()).toEqual({ dailyGoal: 50 })
+  })
+
+  it('設定の項目が欠けていても、初期値で補う', () => {
+    localStorage.setItem('toeic:settings', '{}')
+    expect(storage.loadSettings()).toEqual({ dailyGoal: 20 })
+  })
+
   it('日ごとの記録を保存して読み出せる', () => {
     const log = { '2026-11-16': { answered: 10, correct: 7 } }
     storage.saveDailyLog(log)

@@ -10,9 +10,10 @@ import styles from './DrillScreen.module.css'
 type Props = {
   words: Word[]
   onChangeWords: (words: Word[]) => void
+  onAnswered: (isCorrect: boolean) => void // 1問答えるたびに呼ぶ（1日の記録に使う）
 }
 
-export default function DrillScreen({ words, onChangeWords }: Props) {
+export default function DrillScreen({ words, onChangeWords, onAnswered }: Props) {
   // 問題を作った時刻。描画の途中で Date.now() を呼ぶと値が不安定になるので、state に持っておく
   const [now, setNow] = useState(() => Date.now())
   // 今出している問題。null なら出題できない（単語が足りない）
@@ -43,6 +44,7 @@ export default function DrillScreen({ words, onChangeWords }: Props) {
     const isCorrect = choice === question.answer
     const updated = applyAnswer(words, question, isCorrect, Date.now())
     onChangeWords(updated)
+    onAnswered(isCorrect)
 
     const answeredCount = session.answered + 1
     setSession({ answered: answeredCount, correct: session.correct + (isCorrect ? 1 : 0) })

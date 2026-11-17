@@ -45,7 +45,13 @@ export type Template = {
 }
 
 // 日ごとの記録。キーは "2026-11-16" のような日付の文字列
+// goal は「その日の目標問題数」。あとで目標を変えても、過去の日の達成判定が変わらないように記録しておく。
 export type DailyLog = Record<
   string,
-  { answered: number; correct: number }
+  { answered: number; correct: number; goal?: number }
 >
+
+// ユーザーの設定
+export type Settings = {
+  dailyGoal: number // 1日の目標問題数
+}

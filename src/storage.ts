@@ -2,7 +2,8 @@
 // 画面のコードは localStorage を直接さわらない。
 // → あとで Firebase に変えるときは、このファイルの中身だけ直せばよい。
 
-import type { DailyLog, Template, Word, WordFamily } from './types'
+import { DEFAULT_SETTINGS } from './constants'
+import type { DailyLog, Settings, Template, Word, WordFamily } from './types'
 
 // 他のアプリのデータとぶつからないよう、キーに共通の接頭辞をつける
 const PREFIX = 'toeic:'
@@ -43,4 +44,8 @@ export const storage = {
 
   loadDailyLog: (): DailyLog => load<DailyLog>('dailyLog', {}),
   saveDailyLog: (log: DailyLog): void => save('dailyLog', log),
+
+  // 設定：保存されていない項目は初期値で補う（あとで設定項目を増やしても壊れない）
+  loadSettings: (): Settings => ({ ...DEFAULT_SETTINGS, ...load<Partial<Settings>>('settings', {}) }),
+  saveSettings: (settings: Settings): void => save('settings', settings),
 }
