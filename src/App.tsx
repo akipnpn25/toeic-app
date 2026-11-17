@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import styles from './App.module.css'
 import ProgressPanel from './components/ProgressPanel'
+import PuppyCard from './components/PuppyCard'
 import { recordToLog, toDateKey } from './logic/progress'
 import DrillScreen from './screens/DrillScreen'
 import AddScreen from './screens/AddScreen'
@@ -79,8 +80,7 @@ function App() {
     setToday(toDateKey(now))
   }
 
-  function handleChangeGoal(goal: number) {
-    const next = { ...settings, dailyGoal: goal }
+  function handleChangeSettings(next: Settings) {
     setSettings(next)
     storage.saveSettings(next)
   }
@@ -90,12 +90,22 @@ function App() {
       <main className={styles.main}>
         {/* 問題を解く画面には、今日の進み具合を上に出す */}
         {(tab === 'drill' || tab === 'cloze') && (
-          <ProgressPanel
-            log={log}
-            today={today}
-            goal={settings.dailyGoal}
-            onChangeGoal={handleChangeGoal}
-          />
+          <>
+            <PuppyCard
+              words={words}
+              log={log}
+              today={today}
+              goal={settings.dailyGoal}
+              name={settings.puppyName}
+              onChangeName={(puppyName) => handleChangeSettings({ ...settings, puppyName })}
+            />
+            <ProgressPanel
+              log={log}
+              today={today}
+              goal={settings.dailyGoal}
+              onChangeGoal={(dailyGoal) => handleChangeSettings({ ...settings, dailyGoal })}
+            />
+          </>
         )}
 
         {/* tab が一致する画面だけを表示する */}

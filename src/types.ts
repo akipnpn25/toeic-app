@@ -78,4 +78,5 @@ export type DailyLog = Record<
 // ユーザーの設定
 export type Settings = {
   dailyGoal: number // 1日の目標問題数
+  puppyName: string // 子犬の名前
 }

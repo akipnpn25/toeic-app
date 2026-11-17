@@ -65,6 +65,24 @@ export function answeredToday(log: DailyLog, today: string): number {
   return log[today]?.answered ?? 0
 }
 
+// 2つの日付キーの間の日数（from から to まで。to のほうが後なら正の数）。
+// 夏時間などで1日が23時間・25時間になる日があっても狂わないよう、UTC（世界標準時）の日付で数える。
+export function daysBetween(from: string, to: string): number {
+  const toUtc = (key: string) => {
+    const [y, m, d] = key.split('-').map(Number)
+    return Date.UTC(y, m - 1, d)
+  }
+  return Math.round((toUtc(to) - toUtc(from)) / 86_400_000)
+}
+
+// 今日以前で、いちばん最近に目標を達成した日。一度もなければ null。
+export function lastAchievedDay(log: DailyLog, today: string, currentGoal: number): string | null {
+  const days = Object.keys(log)
+    .filter((key) => key <= today && isAchieved(log, key, today, currentGoal))
+    .sort()
+  return days.length > 0 ? days[days.length - 1] : null
+}
+
 // ---- 連続日数 ----
 
 // 現在の連続日数。

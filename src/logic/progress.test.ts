@@ -6,7 +6,9 @@ import {
   bestStreak,
   buildCalendar,
   currentStreak,
+  daysBetween,
   isAchieved,
+  lastAchievedDay,
   recordToLog,
   toDateKey,
 } from './progress'
@@ -68,6 +70,25 @@ describe('isAchieved / answeredToday', () => {
   it('今日の問題数', () => {
     expect(answeredToday(log({ [TODAY]: 7 }), TODAY)).toBe(7)
     expect(answeredToday({}, TODAY)).toBe(0)
+  })
+})
+
+describe('daysBetween / lastAchievedDay', () => {
+  it('日数を数える（月・年をまたぐ。同じ日は0）', () => {
+    expect(daysBetween('2026-11-16', '2026-11-16')).toBe(0)
+    expect(daysBetween('2026-11-16', '2026-11-19')).toBe(3)
+    expect(daysBetween('2026-10-30', '2026-11-02')).toBe(3)
+    expect(daysBetween('2025-12-31', '2026-01-01')).toBe(1)
+    expect(daysBetween('2026-03-01', '2026-02-28')).toBe(-1)
+  })
+  it('夏時間の切り替えがある日をまたいでも、1日は1日', () => {
+    expect(daysBetween('2026-03-07', '2026-03-09')).toBe(2) // 米国の夏時間開始（3/8）をまたぐ
+  })
+  it('いちばん最近に達成した日を返す（今日より後の記録は無視。なければ null）', () => {
+    const l = log({ '2026-11-10': 10, '2026-11-14': 10, '2026-11-15': 3, '2026-11-20': 10 })
+    expect(lastAchievedDay(l, '2026-11-16', GOAL)).toBe('2026-11-14')
+    expect(lastAchievedDay({}, TODAY, GOAL)).toBeNull()
+    expect(lastAchievedDay(log({ '2026-11-15': 3 }), TODAY, GOAL)).toBeNull()
   })
 })
 

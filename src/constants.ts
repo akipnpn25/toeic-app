@@ -4,7 +4,10 @@ import type { FormKey, Pos, Settings } from './types'
 export const DAILY_GOAL_OPTIONS = [10, 20, 30, 50]
 
 // 設定の初期値
-export const DEFAULT_SETTINGS: Settings = { dailyGoal: 20 }
+export const DEFAULT_SETTINGS: Settings = { dailyGoal: 20, puppyName: 'こいぬ' }
+
+// 子犬の名前の最大文字数
+export const PUPPY_NAME_MAX = 12
 
 // 品詞の日本語名
 export const POS_LABELS: Record<Pos, string> = {

@@ -64,17 +64,17 @@ describe('storage', () => {
   })
 
   it('設定は、何もなければ初期値（目標20問）', () => {
-    expect(storage.loadSettings()).toEqual({ dailyGoal: 20 })
+    expect(storage.loadSettings()).toEqual({ dailyGoal: 20, puppyName: 'こいぬ' })
   })
 
   it('設定を保存して読み出せる', () => {
-    storage.saveSettings({ dailyGoal: 50 })
-    expect(storage.loadSettings()).toEqual({ dailyGoal: 50 })
+    storage.saveSettings({ dailyGoal: 50, puppyName: 'ポチ' })
+    expect(storage.loadSettings()).toEqual({ dailyGoal: 50, puppyName: 'ポチ' })
   })
 
   it('設定の項目が欠けていても、初期値で補う', () => {
-    localStorage.setItem('toeic:settings', '{}')
-    expect(storage.loadSettings()).toEqual({ dailyGoal: 20 })
+    localStorage.setItem('toeic:settings', '{"dailyGoal":30}') // 昔の保存データ（名前の項目がない）
+    expect(storage.loadSettings()).toEqual({ dailyGoal: 30, puppyName: 'こいぬ' })
   })
 
   it('日ごとの記録を保存して読み出せる', () => {
