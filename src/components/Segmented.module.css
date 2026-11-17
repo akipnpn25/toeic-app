@@ -1,0 +1,26 @@
+.segmented {
+  display: flex;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.option {
+  flex: 1;
+  padding: 9px 4px;
+  border: none;
+  background: none;
+  color: var(--subtext);
+  font-size: 14px;
+}
+
+.option + .option {
+  border-left: 1px solid var(--border);
+}
+
+.active {
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: bold;
+}

@@ -1,0 +1,51 @@
+/* 語の仲間の入力：ラベルの下に、英単語と意味を横並び */
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.formLabel {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: var(--subtext);
+}
+
+.list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itemText {
+  font-size: 15px;
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.group {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.group summary {
+  color: var(--text);
+  cursor: pointer;
+}

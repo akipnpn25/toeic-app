@@ -49,6 +49,20 @@ describe('storage', () => {
     expect(storage.loadDailyLog()).toEqual({})
   })
 
+  it('語の仲間・テンプレート・パターン別の成績も、保存して読み出せる', () => {
+    expect(storage.loadFamilies()).toEqual([])
+    expect(storage.loadTemplates()).toEqual([])
+    expect(storage.loadPatternStats()).toEqual({})
+
+    const families = [{ id: 'f', verb: 'decide', noun: 'decision', meanings: {} }]
+    storage.saveFamilies(families)
+    expect(storage.loadFamilies()).toEqual(families)
+
+    const stats = { noun_det: { answered: 3, correct: 2 } }
+    storage.savePatternStats(stats)
+    expect(storage.loadPatternStats()).toEqual(stats)
+  })
+
   it('設定は、何もなければ初期値（目標20問）', () => {
     expect(storage.loadSettings()).toEqual({ dailyGoal: 20 })
   })

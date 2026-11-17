@@ -3,7 +3,7 @@
 // → あとで Firebase に変えるときは、このファイルの中身だけ直せばよい。
 
 import { DEFAULT_SETTINGS } from './constants'
-import type { DailyLog, Settings, Template, Word, WordFamily } from './types'
+import type { DailyLog, PatternStats, Settings, Template, Word, WordFamily } from './types'
 
 // 他のアプリのデータとぶつからないよう、キーに共通の接頭辞をつける
 const PREFIX = 'toeic:'
@@ -44,6 +44,10 @@ export const storage = {
 
   loadDailyLog: (): DailyLog => load<DailyLog>('dailyLog', {}),
   saveDailyLog: (log: DailyLog): void => save('dailyLog', log),
+
+  // 品詞問題の、パターンごとの成績
+  loadPatternStats: (): PatternStats => load<PatternStats>('patternStats', {}),
+  savePatternStats: (stats: PatternStats): void => save('patternStats', stats),
 
   // 設定：保存されていない項目は初期値で補う（あとで設定項目を増やしても壊れない）
   loadSettings: (): Settings => ({ ...DEFAULT_SETTINGS, ...load<Partial<Settings>>('settings', {}) }),

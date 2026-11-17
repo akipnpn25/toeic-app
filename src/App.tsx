@@ -6,7 +6,8 @@ import DrillScreen from './screens/DrillScreen'
 import AddScreen from './screens/AddScreen'
 import ListScreen from './screens/ListScreen'
 import { storage } from './storage'
-import type { DailyLog, Settings, Word } from './types'
+import ClozeScreen from './screens/ClozeScreen'
+import type { DailyLog, PatternStats, Settings, Template, Word, WordFamily } from './types'
 
 // タブの種類。この4つ以外の文字は入れられない（TypeScript が止めてくれる）
 type Tab = 'drill' | 'cloze' | 'list' | 'add'
@@ -29,6 +30,9 @@ function App() {
   // 単語リストはアプリ全体で共有するので、いちばん上の App が持つ。
   // useState に関数を渡すと、最初の1回だけ実行される（保存データの読み込みは最初だけでよい）
   const [words, setWords] = useState<Word[]>(() => storage.loadWords())
+  const [families, setFamilies] = useState<WordFamily[]>(() => storage.loadFamilies()) // 語の仲間
+  const [templates, setTemplates] = useState<Template[]>(() => storage.loadTemplates()) // テンプレート文
+  const [patternStats, setPatternStats] = useState<PatternStats>(() => storage.loadPatternStats()) // パターン別の成績
   const [log, setLog] = useState<DailyLog>(() => storage.loadDailyLog()) // 日ごとの記録
   const [settings, setSettings] = useState<Settings>(() => storage.loadSettings())
   // 今日の日付。描画の途中で Date.now() を呼ぶと値が不安定になるので、state に持っておく
@@ -49,6 +53,21 @@ function App() {
   function handleChangeWords(next: Word[]) {
     setWords(next)
     storage.saveWords(next)
+  }
+
+  function handleChangeFamilies(next: WordFamily[]) {
+    setFamilies(next)
+    storage.saveFamilies(next)
+  }
+
+  function handleChangeTemplates(next: Template[]) {
+    setTemplates(next)
+    storage.saveTemplates(next)
+  }
+
+  function handleChangePatternStats(next: PatternStats) {
+    setPatternStats(next)
+    storage.savePatternStats(next)
   }
 
   // 1問答えたときに、今日の記録に足す
@@ -83,9 +102,27 @@ function App() {
         {tab === 'drill' && (
           <DrillScreen words={words} onChangeWords={handleChangeWords} onAnswered={handleAnswered} />
         )}
-        {tab === 'cloze' && <p>穴埋めはステップ8・9で作ります。</p>}
+        {tab === 'cloze' && (
+          <ClozeScreen
+            words={words}
+            families={families}
+            templates={templates}
+            stats={patternStats}
+            onChangeStats={handleChangePatternStats}
+            onAnswered={handleAnswered}
+          />
+        )}
         {tab === 'list' && <ListScreen words={words} onChangeWords={handleChangeWords} />}
-        {tab === 'add' && <AddScreen words={words} onChangeWords={handleChangeWords} />}
+        {tab === 'add' && (
+          <AddScreen
+            words={words}
+            families={families}
+            templates={templates}
+            onChangeWords={handleChangeWords}
+            onChangeFamilies={handleChangeFamilies}
+            onChangeTemplates={handleChangeTemplates}
+          />
+        )}
       </main>
 
       <nav className={styles.tabBar}>

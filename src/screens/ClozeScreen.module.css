@@ -1,0 +1,136 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.sentence {
+  margin: 8px 0 16px;
+  font-size: 19px;
+  line-height: 1.6;
+}
+
+.blank {
+  letter-spacing: 1px;
+  color: var(--subtext);
+}
+
+.filled {
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 17px;
+  text-align: left;
+}
+
+.choiceSub {
+  font-size: 13px;
+  color: var(--subtext);
+}
+
+.correct {
+  border-color: #1e8e3e;
+  background: rgba(30, 142, 62, 0.18);
+}
+
+.wrong {
+  border-color: #d93025;
+  background: rgba(217, 48, 37, 0.18);
+}
+
+.explain p {
+  margin: 0 0 8px;
+}
+
+.ok {
+  color: #1e8e3e;
+  font-weight: bold;
+}
+
+.ng {
+  color: #d93025;
+  font-weight: bold;
+}
+
+.clue {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--card);
+  font-size: 14px;
+}
+
+.next {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.stats {
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.stats summary {
+  color: var(--subtext);
+  cursor: pointer;
+}
+
+.statList {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 1行：パターン名 / 棒グラフ / 数字 */
+.statRow {
+  display: grid;
+  grid-template-columns: 1fr 70px;
+  gap: 2px 8px;
+  align-items: center;
+}
+
+.statLabel {
+  grid-column: 1 / -1;
+}
+
+.statBar {
+  grid-column: 1 / -1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.statFill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.statValue {
+  font-size: 12px;
+  color: var(--subtext);
+  text-align: right;
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
+}
