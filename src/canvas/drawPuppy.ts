@@ -5,9 +5,13 @@
 
 import { MAX_STAGE } from '../logic/puppy'
 import type { Mood } from '../logic/puppy'
+import { itemsForStage } from '../logic/puppyItems'
+import { drawBackItems, drawCushion, drawDogItems, drawFrontItems } from './drawItems'
+import type { Geometry } from './drawItems'
+import { COLOR, ellipse } from './shapes'
 
-export const VIRTUAL_W = 200
-export const VIRTUAL_H = 170
+export const VIRTUAL_W = 260
+export const VIRTUAL_H = 190
 
 // 子犬の大きさ。ステージ0で 55%、ステージ20（最終）で 100%。
 export function puppyScale(stage: number): number {
@@ -15,39 +19,12 @@ export function puppyScale(stage: number): number {
   return 0.55 + (0.45 * s) / MAX_STAGE
 }
 
-const COLOR = {
-  body: '#e9bd82',
-  belly: '#f8e3bd',
-  ear: '#b98350',
-  dark: '#3b2a1e',
-  nose: '#2b2018',
-  pink: '#f4a6a6',
-  tongue: '#ee7f8e',
-  shadow: 'rgba(0, 0, 0, 0.15)',
-}
-
-// 楕円を塗る小さな道具
-function ellipse(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  rx: number,
-  ry: number,
-  fill: string,
-  rotation = 0,
-) {
-  ctx.beginPath()
-  ctx.ellipse(x, y, rx, ry, rotation, 0, Math.PI * 2)
-  ctx.fillStyle = fill
-  ctx.fill()
-}
-
 export type PuppyLook = {
   stage: number
   mood: Mood
 }
 
-// 子犬を描く。紙の中央の下のほうに座らせる。
+// 子犬とアイテムを描く。子犬は紙の中央の下のほうに座らせる。
 export function drawPuppy(ctx: CanvasRenderingContext2D, look: PuppyLook) {
   const u = puppyScale(look.stage) // 「1単位の長さ」。全てのパーツの大きさをこれの倍数で決める
   const cx = VIRTUAL_W / 2 // 中心の x
@@ -58,11 +35,19 @@ export function drawPuppy(ctx: CanvasRenderingContext2D, look: PuppyLook) {
   const headDrop = sleeping ? 8 * u : 0
   const headY = gy - 108 * u + headDrop
 
+  // このステージで持っているアイテム（Set は「重複のない集まり」。has で「入っているか」を調べられる）
+  const items = new Set(itemsForStage(look.stage).map((item) => item.id))
+  const geo: Geometry = { cx, gy, u, headY, fed: look.mood === 'fed' }
+
   ctx.save()
   ctx.lineCap = 'round'
 
-  // 1) 影
+  // ---- うしろのもの ----
+  drawBackItems(ctx, items, geo)
+
+  // 1) 影とクッション
   ellipse(ctx, cx, gy, 62 * u, 8 * u, COLOR.shadow)
+  drawCushion(ctx, items, geo)
 
   // 2) しっぽ（体のうしろ）。ごきげんなときは高く上げる
   const tailLift = look.mood === 'fed' ? 22 * u : look.mood === 'hungry' ? 8 * u : 0
@@ -111,6 +96,7 @@ export function drawPuppy(ctx: CanvasRenderingContext2D, look: PuppyLook) {
   const eyeDx = 17 * u
   if (look.mood === 'fed') {
     // ごきげん：笑った目（∩）、舌、ほっぺ、ハート
+    ctx.strokeStyle = COLOR.dark
     ctx.lineWidth = 2.6 * u
     for (const dx of [-eyeDx, eyeDx]) {
       ctx.beginPath()
@@ -124,9 +110,10 @@ export function drawPuppy(ctx: CanvasRenderingContext2D, look: PuppyLook) {
     ctx.globalAlpha = 1
     ctx.fillStyle = COLOR.tongue
     ctx.font = `${16 * u}px sans-serif`
-    ctx.fillText('♥', cx + 40 * u, headY - 38 * u)
+    ctx.fillText('♥', cx + 44 * u, headY - 30 * u)
   } else if (sleeping) {
     // 寝ている：閉じた目（∪）と zzz
+    ctx.strokeStyle = COLOR.dark
     ctx.lineWidth = 2.6 * u
     for (const dx of [-eyeDx, eyeDx]) {
       ctx.beginPath()
@@ -135,16 +122,20 @@ export function drawPuppy(ctx: CanvasRenderingContext2D, look: PuppyLook) {
     }
     ctx.fillStyle = COLOR.dark
     ctx.font = `bold ${14 * u}px sans-serif`
-    ctx.fillText('z', cx + 40 * u, headY - 34 * u)
+    ctx.fillText('z', cx + 44 * u, headY - 28 * u)
     ctx.font = `bold ${10 * u}px sans-serif`
-    ctx.fillText('z', cx + 54 * u, headY - 46 * u)
+    ctx.fillText('z', cx + 58 * u, headY - 40 * u)
   } else {
     // おなかがすいている：まるい目（うるうる）
     for (const dx of [-eyeDx, eyeDx]) {
       ellipse(ctx, cx + dx, eyeY, 6 * u, 7 * u, COLOR.dark)
-      ellipse(ctx, cx + dx + 2 * u, eyeY - 2.5 * u, 2.2 * u, 2.2 * u, '#ffffff')
+      ellipse(ctx, cx + dx + 2 * u, eyeY - 2.5 * u, 2.2 * u, 2.2 * u, COLOR.white)
     }
   }
+
+  // ---- 子犬が身につけるもの（頭と顔のうえ）と、手前のもの ----
+  drawDogItems(ctx, items, geo)
+  drawFrontItems(ctx, items, geo)
 
   ctx.restore()
 }

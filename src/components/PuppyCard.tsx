@@ -1,5 +1,6 @@
 import { PUPPY_NAME_MAX } from '../constants'
 import { MAX_STAGE, WORDS_PER_STAGE, masteredCount, moodMessage, puppyMood, stageProgress } from '../logic/puppy'
+import { ITEMS, itemsForStage, nextItem, wordsToUnlock } from '../logic/puppyItems'
 import type { DailyLog, Word } from '../types'
 import PuppyCanvas from './PuppyCanvas'
 import styles from './PuppyCard.module.css'
@@ -19,6 +20,8 @@ export default function PuppyCard({ words, log, today, goal, name, onChangeName 
   const progress = stageProgress(mastered)
   const mood = puppyMood(log, today, goal)
   const displayName = name.trim() === '' ? 'こいぬ' : name
+  const owned = itemsForStage(progress.stage)
+  const upcoming = nextItem(progress.stage) // 次に手に入るアイテム（全部そろっていれば null）
 
   return (
     <section className={styles.card}>
@@ -47,6 +50,11 @@ export default function PuppyCard({ words, log, today, goal, name, onChangeName 
           {progress.isMax
             ? '最終ステージです！'
             : `次のステージまで あと${progress.remaining}語（${WORDS_PER_STAGE}語ごと）`}
+        </div>
+
+        <div className={styles.next}>
+          アイテム {owned.length} / {ITEMS.length}
+          {upcoming && `　次：${upcoming.label}（あと${wordsToUnlock(upcoming) - mastered}語）`}
         </div>
 
         <p className={styles.message}>{moodMessage(mood, displayName)}</p>
