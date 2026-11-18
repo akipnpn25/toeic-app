@@ -2,7 +2,8 @@
 // 子犬とのかさなり方で、3つに分けてある（描く順番が大事。あとから描いたものが手前に見える）。
 //   1. drawBackItems  … 子犬のうしろ：犬小屋・トロフィー・お花・風船
 //   2. drawCushion    … 子犬の下：クッション
-//   3. drawDogItems   … 子犬が身につけるもの：首輪・バンダナ・メダル・リボン・王冠
+//   3. drawNeckItems  … 子犬が首につけるもの：首輪・バンダナ・メダル
+//      drawHeadItems  … 子犬が頭にのせるもの：リボン・王冠
 //   4. drawFrontItems … 子犬の手前：ごはん皿・ボール・骨・フリスビー
 
 import type { ItemId } from '../logic/puppyItems'
@@ -92,8 +93,9 @@ export function drawCushion(ctx: CanvasRenderingContext2D, items: Items, g: Geom
   ellipse(ctx, g.cx, g.gy - 5, 62 * g.u, 8 * g.u, COLOR.cushionTop)
 }
 
-// ---- 3) 子犬が身につけるもの（頭と体を描いたあとに描く） ----
-export function drawDogItems(ctx: CanvasRenderingContext2D, items: Items, g: Geometry) {
+// ---- 3) 子犬が身につけるもの ----
+// 首まわり（体といっしょに動く）：首輪・バンダナ・メダル
+export function drawNeckItems(ctx: CanvasRenderingContext2D, items: Items, g: Geometry) {
   const { cx, headY, u } = g
 
   if (items.has('collar')) {
@@ -129,6 +131,11 @@ export function drawDogItems(ctx: CanvasRenderingContext2D, items: Items, g: Geo
     ellipse(ctx, cx, headY + 76 * u, 9 * u, 9 * u, COLOR.medal)
     ellipse(ctx, cx, headY + 76 * u, 6 * u, 6 * u, COLOR.medalInner)
   }
+}
+
+// 頭の上（頭といっしょに傾く）：リボン・王冠
+export function drawHeadItems(ctx: CanvasRenderingContext2D, items: Items, g: Geometry) {
+  const { cx, headY, u } = g
 
   if (items.has('ribbon')) {
     // 右の耳のうえのリボン
@@ -200,7 +207,7 @@ export function drawFrontItems(ctx: CanvasRenderingContext2D, items: Items, g: G
 
   if (items.has('frisbee')) {
     // 空を飛んでいるフリスビー
-    ellipse(ctx, 240, 50, 14, 4.5, COLOR.frisbee, -0.25)
-    ellipse(ctx, 240, 49.5, 9, 2.5, COLOR.frisbeeInner, -0.25)
+    ellipse(ctx, 240, gy - 130, 14, 4.5, COLOR.frisbee, -0.25)
+    ellipse(ctx, 240, gy - 130.5, 9, 2.5, COLOR.frisbeeInner, -0.25)
   }
 }

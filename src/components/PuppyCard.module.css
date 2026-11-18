@@ -59,6 +59,13 @@
   color: var(--subtext);
 }
 
+.trick {
+  min-height: 1.3em; /* 芸の表示が出入りしても、カードの高さが変わらないように */
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--accent);
+}
+
 .message {
   margin: 4px 0 0;
   font-size: 13px;
